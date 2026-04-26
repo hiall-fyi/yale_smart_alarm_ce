@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "panic": {
+        "default": "mdi:alarm-light"
+      },
+      "rf_jamming": {
+        "default": "mdi:signal-off"
+      },
+      "in_alarm": {
+        "default": "mdi:alarm-light"
+      }
+    },
+    "lock": {
+      "lock": {
+        "default": "mdi:lock",
+        "state": {
+          "locked": "mdi:lock",
+          "unlocked": "mdi:lock-open",
+          "locking": "mdi:lock-clock",
+          "unlocking": "mdi:lock-clock",
+          "jammed": "mdi:lock-alert"
+        }
+      }
+    },
+    "select": {
+      "siren_volume": {
+        "default": "mdi:volume-high"
+      },
+      "chime_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "trouble_volume": {
+        "default": "mdi:volume-medium"
+      },
+      "siren_device_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "switch": {
+      "white_led": {
+        "default": "mdi:led-on"
+      },
+      "cellular_backup": {
+        "default": "mdi:signal-cellular-3"
+      },
+      "wifi": {
+        "default": "mdi:wifi"
+      },
+      "entry_exit_tone": {
+        "default": "mdi:music-note"
+      },
+      "proximity_wakeup": {
+        "default": "mdi:motion-sensor"
+      }
+    }
+  }
+}

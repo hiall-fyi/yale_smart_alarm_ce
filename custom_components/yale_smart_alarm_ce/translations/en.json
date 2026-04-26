@@ -1,0 +1,222 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Yale Smart Alarm CE",
+        "description": "Enter your Yale Home account credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "Select your region based on where you purchased your Yale products"
+        }
+      },
+      "mfa": {
+        "title": "Verification Code",
+        "description": "A verification code has been sent to {email}. Please enter it below.",
+        "data": {
+          "code": "Verification Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Yale Smart Alarm CE",
+        "description": "Your session for {email} has expired. Please re-enter your password.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Yale Smart Alarm CE",
+        "description": "Update your Yale Home account credentials for {email}.",
+        "data": {
+          "password": "Password",
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "Select your region based on where you purchased your Yale products"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Yale API",
+      "invalid_auth": "Invalid email or password",
+      "invalid_code": "Invalid verification code",
+      "rate_limited": "Too many requests — please wait a few minutes and try again",
+      "unknown": "Unknown error occurred"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "reauth_successful": "Re-authentication successful",
+      "reconfigure_successful": "Reconfiguration successful",
+      "wrong_account": "Cannot change the account for an existing entry"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Yale Smart Alarm CE Options",
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "update_interval": "How often to poll the Yale API (10–300 seconds)"
+        }
+      }
+    }
+  },
+
+  "entity": {
+    "alarm_control_panel": {
+      "alarm": {
+        "name": "Alarm"
+      }
+    },
+    "binary_sensor": {
+      "contact": {
+        "name": "Contact"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "smoke": {
+        "name": "Smoke"
+      },
+      "panic": {
+        "name": "Panic"
+      },
+      "battery_low": {
+        "name": "Battery low"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "connected": {
+        "name": "Connected"
+      },
+      "hub_tamper": {
+        "name": "Tamper"
+      },
+      "rf_jamming": {
+        "name": "RF jamming"
+      },
+      "in_alarm": {
+        "name": "Alarm triggered"
+      },
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "test_mode": {
+        "name": "Test mode"
+      },
+      "supports_entry_codes": {
+        "name": "Supports entry codes"
+      },
+      "doorbell_ding": {
+        "name": "Doorbell"
+      },
+      "lock_door": {
+        "name": "Door"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "Lock"
+      }
+    },
+    "select": {
+      "siren_volume": {
+        "name": "Siren volume"
+      },
+      "chime_volume": {
+        "name": "Chime volume"
+      },
+      "trouble_volume": {
+        "name": "Trouble volume"
+      },
+      "siren_device_volume": {
+        "name": "Volume"
+      }
+    },
+    "sensor": {
+      "hub_battery": {
+        "name": "Battery"
+      },
+      "lock_battery": {
+        "name": "Battery"
+      },
+      "cellular_status": {
+        "name": "Cellular status"
+      },
+      "timezone": {
+        "name": "Timezone"
+      },
+      "lock_battery_state": {
+        "name": "Battery state"
+      }
+    },
+    "switch": {
+      "white_led": {
+        "name": "White LED"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      },
+      "rf_jam_detection": {
+        "name": "RF jam detection"
+      },
+      "force_arm": {
+        "name": "Force arm"
+      },
+      "cellular_backup": {
+        "name": "Cellular backup"
+      },
+      "wifi": {
+        "name": "WiFi"
+      },
+      "daylight_savings": {
+        "name": "Daylight savings"
+      },
+      "rf_supervisory": {
+        "name": "RF supervisory"
+      },
+      "keypad_quickset": {
+        "name": "Keypad quickset"
+      },
+      "entry_exit_tone": {
+        "name": "Entry/exit tone"
+      },
+      "proximity_wakeup": {
+        "name": "Proximity wakeup"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed — token may have expired"
+    },
+    "rate_limited": {
+      "message": "Yale API rate limit exceeded — please wait and try again"
+    },
+    "api_error": {
+      "message": "Yale API error during {operation}: {error}"
+    },
+    "unexpected_error": {
+      "message": "Unexpected error during {operation}: {error}"
+    }
+  },
+  "issues": {
+    "auth_expired": {
+      "title": "Yale authentication expired",
+      "description": "Your Yale Smart Alarm CE session has expired. Go to Settings > Devices & Services > Yale Smart Alarm CE and re-authenticate."
+    },
+    "rate_limited": {
+      "title": "Yale API rate limited",
+      "description": "The Yale API is rate limiting requests. This usually resolves automatically. If it persists, try increasing the update interval in the integration options."
+    }
+  }
+}
