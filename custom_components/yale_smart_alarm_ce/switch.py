@@ -82,6 +82,18 @@ DEVICE_SWITCHES: tuple[YaleDeviceSwitchDescription, ...] = (
         device_types=SIREN_TYPES,
     ),
     YaleDeviceSwitchDescription(
+        key="comfort_led",
+        translation_key="comfort_led",
+        setting_key="comfortLedEnabled",
+        device_types=SIREN_TYPES,
+    ),
+    YaleDeviceSwitchDescription(
+        key="strobe",
+        translation_key="strobe",
+        setting_key="strobeEnabled",
+        device_types=SIREN_TYPES,
+    ),
+    YaleDeviceSwitchDescription(
         key="proximity_wakeup",
         translation_key="proximity_wakeup",
         setting_key="proximityWakeupEnabled",

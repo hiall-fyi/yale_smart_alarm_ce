@@ -9,10 +9,10 @@
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)
 
 <!-- Status Badges -->
-![Version](https://img.shields.io/badge/Version-0.1.0-purple?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-0.1.1-purple?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg?style=for-the-badge)
-![Coverage](https://img.shields.io/badge/Coverage-99%25-brightgreen?style=for-the-badge)
+![Coverage](https://img.shields.io/badge/Coverage-98%25-brightgreen?style=for-the-badge)
 
 <!-- Community Badges -->
 ![GitHub stars](https://img.shields.io/github/stars/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github)
@@ -140,28 +140,6 @@ Full alarm control with MFA authentication, device-based organization, and compr
 - **Device Settings** — Entry/exit tones (sirens), proximity wakeup (keypads)
 - **Multi-Region** — Global (EU, UK, US), China, Korea (Gateman), Australia/NZ (Lockwood)
 
-### Comparison with Official Integration
-
-| Feature | Official `yale_smart_alarm` | This Integration |
-|---------|:---------------------------:|:----------------:|
-| **New Yale Home Hub** | ❌ | ✅ |
-| **Old Yale Sync Hub** | ✅ | ❌ |
-| **MFA Support** | ❌ | ✅ |
-| **Alarm Control** | ✅ | ✅ |
-| **Contact Sensors** | ✅ | ✅ |
-| **Motion Sensors** | — | ✅ |
-| **Battery Status** | — | ✅ |
-| **Tamper Detection** | — | ✅ |
-| **RF Jamming Detection** | — | ✅ |
-| **Device Connectivity** | — | ✅ |
-| **Volume Controls** | — | ✅ |
-| **Device Settings** | — | ✅ |
-| **Smart Locks** | ⚠️ Basic | ✅ Full |
-| **Smoke Sensors** | — | ✅ |
-| **Device-based Organization** | — | ✅ |
-
-*— = not verified for the official integration*
-
 ---
 
 ## Configuration
@@ -231,7 +209,9 @@ To update your password or region without removing the integration, click **Conf
 | Entity | Type | Applies To |
 |---|---|---|
 | Volume | Select | Siren devices |
-| Entry/Exit Tone | Switch | Siren devices |
+| Entry/Exit Tone | Switch | Indoor siren devices |
+| Comfort LED | Switch | Outdoor siren devices |
+| Strobe Light | Switch | Outdoor siren devices |
 | Proximity Wakeup | Switch | Keypads |
 
 ### Smart Lock
@@ -252,22 +232,28 @@ Disabled-by-default entities can be enabled in the entity settings.
 | Device | Type | Support |
 |--------|------|---------|
 | Yale Smart Alarm Hub | Hub | ✅ Tested |
+| Yale Smart Alarm Hub (Lite) | Hub | ✅ Community Verified |
 | Door/Window Contact Sensor | Contact | ✅ Tested |
-| Outdoor Contact Sensor | Contact | ⚠️ Untested |
+| Outdoor Contact Sensor | Contact | ✅ Community Verified |
 | Shock Sensor | Contact | ✅ Tested |
 | Indoor Motion Sensor (PIR) | Motion | ✅ Tested |
-| Outdoor Motion Sensor | Motion | ⚠️ Untested |
+| Outdoor Motion Sensor | Motion | ✅ Community Verified |
 | Indoor Siren | Siren | ✅ Tested |
-| Outdoor Siren | Siren | ⚠️ Untested |
+| Outdoor Siren | Siren | ✅ Community Verified |
 | Keypad | Keypad | ✅ Tested |
-| Keyfob | Keyfob | ✅ Tested (battery and connectivity only — no button press detection) |
-| Smoke Sensor | Smoke | ⚠️ Untested |
+| Keyfob | Keyfob | ✅ Tested (battery and connectivity only) |
+| Smoke Sensor | Smoke | ✅ Community Verified |
 | Panic Button | Button | ⚠️ Untested |
-| Yale Smart Lock (Linus L2) | Lock | ✅ Tested |
+| Yale Linus L2 | Lock | ✅ Tested |
+| Yale Conexis L1/L2 | Lock | ✅ Community Verified |
+| Yale Keyless Connected | Lock | ✅ Community Verified |
+| Yale Smart Safe (YSS/250/EB1) | Lock | ✅ Community Verified |
 | Yale Smart Lock (other models) | Lock | ⚠️ Untested |
 | Yale Doorbell | Doorbell | ⚠️ Untested |
 
-Devices marked ⚠️ are supported in code but haven't been verified with real hardware yet. If you have any of these, we'd love your help testing — see [#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2).
+**✅ Tested** = verified by the developer. **✅ Community Verified** = confirmed working by beta testers. **⚠️ Untested** = supported in code but not yet verified with real hardware.
+
+If you have any untested devices, we'd love your help — see [#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2).
 
 ### Regional Support
 
@@ -286,7 +272,9 @@ Devices marked ⚠️ are supported in code but haven't been verified with real 
 |------------|-------------|
 | Cloud-Only | All control goes through Yale's cloud servers |
 | Polling Only | No real-time push notifications — the integration polls at your configured interval (default 30 seconds) |
+| PIR Motion Sensors | Motion detection events are **not available via polling**. The Yale API does not include motion state in the device status endpoint — motion events are only sent via real-time push (which this integration doesn't support yet). PIR sensors will show as "Clear" even when motion is detected. The alarm triggered state *does* work — if a PIR triggers the alarm, the alarm entity will show as triggered. |
 | No Temperature Sensors | The Yale API returns temperature readings that can be months old with no indication, so they've been removed |
+| Settings Require Disarm | Changing device or hub settings from HA requires the alarm to be disarmed first (Yale API returns HTTP 412 otherwise) |
 | MFA Required | Email verification required on first setup |
 | Token Expiry | May need to re-authenticate periodically |
 | No Schedule Management | Use Yale Home app for schedule changes |

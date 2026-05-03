@@ -26,11 +26,24 @@ TO_REDACT_DATA: set[str] = {
     "serialNumber",
     "macAddress",
     "identifier",
+    "identifiers",
     "location",
     "LockName",
     "HouseName",
+    "houseID",
+    "HouseID",
     "name",
     "pubsubChannel",
+    # User PII (lock details → users dict)
+    "users",
+    "FirstName",
+    "LastName",
+    # Network / security secrets (alarm info)
+    "wifiPassword",
+    "wifiSsid",
+    # Lock security
+    "remoteOperateSecret",
+    "hostHardwareID",
 }
 
 

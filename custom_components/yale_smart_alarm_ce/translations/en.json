@@ -190,6 +190,12 @@
       "entry_exit_tone": {
         "name": "Entry/exit tone"
       },
+      "comfort_led": {
+        "name": "Comfort LED"
+      },
+      "strobe": {
+        "name": "Strobe light"
+      },
       "proximity_wakeup": {
         "name": "Proximity wakeup"
       }

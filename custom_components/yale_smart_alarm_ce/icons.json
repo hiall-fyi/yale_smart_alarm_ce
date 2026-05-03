@@ -50,6 +50,12 @@
       "entry_exit_tone": {
         "default": "mdi:music-note"
       },
+      "comfort_led": {
+        "default": "mdi:led-on"
+      },
+      "strobe": {
+        "default": "mdi:alarm-light"
+      },
       "proximity_wakeup": {
         "default": "mdi:motion-sensor"
       }

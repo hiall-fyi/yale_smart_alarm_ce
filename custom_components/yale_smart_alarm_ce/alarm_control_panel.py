@@ -85,23 +85,37 @@ class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
         super().__init__(coordinator, alarm_id)
         self._area_id = area_id
         self._attr_unique_id = f"{alarm_id}_{area_id}"
-        self._attr_translation_key = "alarm"
         if area_name:
-            # Multi-area: use area name as entity name suffix
+            # Multi-area: use area name directly so each zone is distinguishable
             self._attr_name = area_name
+        else:
+            self._attr_translation_key = "alarm"
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current arm state.
 
-        Checks triggered state first — a triggered alarm always takes
-        priority over the arm state.  Returns None when the state
-        cannot be determined (shows "unknown" in the UI).
+        Priority order:
+        1. Triggered — always takes priority.
+        2. Exit delay active — show ARMING while the countdown runs.
+        3. Arm state from API — normal armed/disarmed state.
+
+        Returns None when the state cannot be determined (shows
+        "unknown" in the UI).
         """
         # Check triggered FIRST — triggered always takes priority
         for area in self.alarm_status.get("areaAlarmState") or []:
             if area.get("areaID") == self._area_id and area.get("inAlarm"):
                 return AlarmControlPanelState.TRIGGERED
+
+        # Check exit delay — arming in progress.
+        # exitTime comes from the arm command response (not polling data),
+        # stored on the coordinator as _exit_delay_end_ms.
+        exit_end_ms = self.coordinator.exit_delay_end_ms
+        if exit_end_ms > 0:
+            now_ms = datetime.now(tz=UTC).timestamp() * 1000
+            if exit_end_ms > now_ms:
+                return AlarmControlPanelState.ARMING
 
         # Then check arm state
         for area in self.alarm_status.get("areaArmState") or []:
@@ -124,10 +138,10 @@ class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return extra state attributes including exit delay end time."""
-        exit_time = self.alarm_status.get("exitTime")
-        if isinstance(exit_time, (int, float)) and exit_time > 0:
+        exit_end_ms = self.coordinator.exit_delay_end_ms
+        if exit_end_ms > 0:
             try:
-                dt = datetime.fromtimestamp(exit_time / 1000, tz=UTC)
+                dt = datetime.fromtimestamp(exit_end_ms / 1000, tz=UTC)
                 return {"exit_delay_end": dt.isoformat()}
             except (OSError, ValueError, OverflowError):
                 pass

@@ -45,6 +45,7 @@ _REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=30)
 # HTTP status codes used in response handling
 _HTTP_UNAUTHORIZED = 401
 _HTTP_FORBIDDEN = 403
+_HTTP_PRECONDITION_FAILED = 412
 _HTTP_TOO_MANY_REQUESTS = 429
 
 # 403 retry configuration — transient CDN/WAF blocks
@@ -157,6 +158,15 @@ class YaleApiClient:
             _LOGGER.info("Rate limited (HTTP 429), deferring refresh %ds", seconds)
             msg = f"Rate limit exceeded (HTTP 429), retry after {seconds}s"
             raise YaleRateLimitError(msg, retry_after_seconds=seconds)
+
+        if resp.status == _HTTP_PRECONDITION_FAILED:
+            body = await resp.text()
+            _LOGGER.warning(
+                "Precondition failed (HTTP 412): %s",
+                body[:200],
+            )
+            msg = "The alarm must be disarmed before changing settings"
+            raise YaleApiError(msg)
 
         try:
             resp.raise_for_status()

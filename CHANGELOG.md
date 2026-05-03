@@ -4,6 +4,27 @@ All notable changes to Yale Smart Alarm CE are documented here.
 
 ---
 
+## 0.1.1 — Siren Controls, Arming State & Fixes (2026-05-03)
+
+Fixes and improvements based on feedback from beta testers in [#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2). Thanks to @lleraman, @tombaptist, @simonrb2000, @AlexBrown92, @kickasskingy, @PV-44, and @Nomad73 for testing.
+
+### New Features
+
+- **Outdoor siren controls** ([#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) - @lleraman, @tombaptist) — Outdoor sirens now have Comfort LED and Strobe light switches. These only appear for outdoor models — indoor sirens aren't affected.
+- **Arming transitional state** ([#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) - @AlexBrown92, @tombaptist) — When you arm your alarm (home or away), the dashboard now shows "Arming" during the exit delay countdown instead of staying on "Disarmed" until the next poll. The `exit_delay_end` attribute now works correctly too.
+
+### Bug Fixes
+
+- **Fixed multi-zone alarms showing the same name** ([#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) - @lleraman, @tombaptist, @simonrb2000) — If you have multiple alarm zones, each one now shows its actual zone name instead of all being called "Alarm".
+- **Fixed settings changes failing with a cryptic error** ([#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) - @lleraman) — Changing alarm or device settings while the alarm is armed now shows a clear message ("The alarm must be disarmed before changing settings") instead of a generic API error.
+- **Fixed diagnostics exposing personal information** ([#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) - @lleraman) — The diagnostics download now properly redacts user names, WiFi credentials, and other sensitive data that was previously visible.
+
+### Updated
+
+- README updated with community-verified device compatibility.
+
+---
+
 ## 0.1.0 — First Beta Release (2026-04-27)
 
 The first public beta. This build has been running on the developer's own setup for months. Looking for beta testers with different Yale devices — see [#2](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/2) if you'd like to help.
@@ -44,7 +65,7 @@ The first public beta. This build has been running on the developer's own setup 
 - **Cloud-only** — All control goes through Yale's cloud servers
 - **Temperature sensors removed** — The Yale API returns temperature readings that can be months old with no indication of staleness, so they've been removed entirely
 - **Polling only** — No real-time push notifications; the integration polls at your configured interval (default 30 seconds)
-- **Untested devices** — Outdoor sensors, smoke sensors, panic buttons, doorbells, and lock models other than Linus L2 are supported in code but haven't been verified with real hardware yet
+- **Motion sensors don't update in real time** — PIR sensors only report motion through Yale's real-time push channel, which this integration doesn't support yet. The sensor will show "Clear" even when motion is detected. Alarm triggering still works — you'll see the alarm state change, just not the individual PIR sensor.
 
 ---
 

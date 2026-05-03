@@ -100,6 +100,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
         )
         self.previous_device_ids: set[str] = set()
         self._degraded_repoll_scheduled: bool = False
+        self._exit_delay_end_ms: float = 0
 
         interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         super().__init__(
@@ -109,6 +110,11 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=interval),
         )
+
+    @property
+    def exit_delay_end_ms(self) -> float:
+        """Return the exit delay end timestamp in milliseconds, or 0."""
+        return self._exit_delay_end_ms
 
     @staticmethod
     def _is_rate_limit_error(exc: UpdateFailed) -> bool:
@@ -471,16 +477,19 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
     async def async_disarm(self, alarm_id: str, area_ids: list[str]) -> None:
         """Disarm the alarm and refresh."""
         await self.api.disarm(alarm_id, area_ids)
+        self._exit_delay_end_ms = 0
         await self._safe_refresh("disarm")
 
     async def async_arm_home(self, alarm_id: str, area_ids: list[str]) -> None:
         """Arm the alarm in home mode and refresh."""
-        await self.api.arm_home(alarm_id, area_ids)
+        result = await self.api.arm_home(alarm_id, area_ids)
+        self._exit_delay_end_ms = result.get("exitTime", 0) or 0
         await self._safe_refresh("arm home")
 
     async def async_arm_away(self, alarm_id: str, area_ids: list[str]) -> None:
         """Arm the alarm in away mode and refresh."""
-        await self.api.arm_away(alarm_id, area_ids)
+        result = await self.api.arm_away(alarm_id, area_ids)
+        self._exit_delay_end_ms = result.get("exitTime", 0) or 0
         await self._safe_refresh("arm away")
 
     async def async_lock(self, lock_id: str) -> None:
