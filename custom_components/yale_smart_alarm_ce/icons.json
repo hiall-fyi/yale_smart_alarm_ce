@@ -1,0 +1,96 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "panic": {
+        "default": "mdi:alarm-light"
+      },
+      "rf_jamming": {
+        "default": "mdi:signal-off"
+      },
+      "in_alarm": {
+        "default": "mdi:alarm-light"
+      },
+      "supports_entry_codes": {
+        "default": "mdi:dialpad"
+      }
+    },
+    "lock": {
+      "lock": {
+        "default": "mdi:lock",
+        "state": {
+          "locked": "mdi:lock",
+          "unlocked": "mdi:lock-open",
+          "locking": "mdi:lock-clock",
+          "unlocking": "mdi:lock-clock",
+          "jammed": "mdi:lock-alert"
+        }
+      }
+    },
+    "select": {
+      "siren_volume": {
+        "default": "mdi:volume-high"
+      },
+      "chime_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "trouble_volume": {
+        "default": "mdi:volume-medium"
+      },
+      "siren_device_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "sensor": {
+      "timezone": {
+        "default": "mdi:map-clock-outline"
+      },
+      "cellular_status": {
+        "default": "mdi:signal-cellular-outline"
+      },
+      "lock_battery_state": {
+        "default": "mdi:battery-heart-variant"
+      }
+    },
+    "switch": {
+      "white_led": {
+        "default": "mdi:led-on"
+      },
+      "tamper_detection": {
+        "default": "mdi:shield-alert-outline"
+      },
+      "rf_jam_detection": {
+        "default": "mdi:signal-off"
+      },
+      "force_arm": {
+        "default": "mdi:shield-lock-outline"
+      },
+      "cellular_backup": {
+        "default": "mdi:signal-cellular-3"
+      },
+      "wifi": {
+        "default": "mdi:wifi"
+      },
+      "daylight_savings": {
+        "default": "mdi:weather-sunny-alert"
+      },
+      "rf_supervisory": {
+        "default": "mdi:radio-tower"
+      },
+      "keypad_quickset": {
+        "default": "mdi:dialpad"
+      },
+      "entry_exit_tone": {
+        "default": "mdi:music-note"
+      },
+      "comfort_led": {
+        "default": "mdi:led-on"
+      },
+      "strobe": {
+        "default": "mdi:alarm-light"
+      },
+      "proximity_wakeup": {
+        "default": "mdi:motion-sensor"
+      }
+    }
+  }
+}

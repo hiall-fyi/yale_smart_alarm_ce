@@ -1,0 +1,27 @@
+force_arm:
+  name: Force arm
+  description: >-
+    Arm the alarm while bypassing specified open sensors. Use this after
+    a normal arm attempt fails due to open door/window sensors.
+  target:
+    entity:
+      integration: yale_smart_alarm_ce
+      domain: alarm_control_panel
+  fields:
+    code:
+      name: Arm mode
+      description: Target arm state — "home" for partial arm, "away" for full arm.
+      required: true
+      selector:
+        select:
+          options:
+            - "home"
+            - "away"
+    bypass_devices:
+      name: Bypass devices
+      description: >-
+        List of device IDs to bypass (ignore). These are the sensor IDs
+        reported in the arm_blocked event or error message.
+      required: true
+      selector:
+        object:
