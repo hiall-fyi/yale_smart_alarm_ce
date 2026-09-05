@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # No requirements-dev.txt (or pyproject.toml [project.dependencies]) exists
+  # in this repo yet, so this entry has nothing to track until one does.
+  # manifest.json's own runtime requirements list isn't a format Dependabot
+  # parses. Kept anyway so a future requirements-dev.txt is picked up with
+  # no dependabot.yml change needed.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
