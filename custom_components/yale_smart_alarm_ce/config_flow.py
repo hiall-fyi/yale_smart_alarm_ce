@@ -5,7 +5,7 @@ import logging
 import uuid
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -138,7 +138,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Preserve install_id from existing entry during reauth, otherwise
         # generate new.  install_id is a device fingerprint sent with every
-        # API request — changing it during reauth would start a new "device
+        # API request, so changing it during reauth would start a new "device
         # session", potentially invalidating the current auth and triggering
         # additional MFA challenges.
         install_id: str
@@ -170,7 +170,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 result = await self.api.authenticate(verification_code=code)
                 if result:
-                    # Reauth flow — update existing entry
+                    # Reauth flow, update existing entry
                     if self._reauth_entry:
                         return self.async_update_reload_and_abort(
                             self._reauth_entry,
@@ -214,7 +214,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.region = user_input.get(CONF_REGION, "global")
 
             session = async_get_clientsession(self.hass)
-            # Preserve install_id across reconfigure — a fresh UUID would make
+            # Preserve install_id across reconfigure, a fresh UUID would make
             # the Yale server treat this as a new device and demand MFA again.
             self.api = YaleApiClient(
                 session, self.email or "", self.password, self._resolve_api_key(),
@@ -228,7 +228,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=self._build_entry_data(),
                 )
             if result is False:
-                # MFA required — store entry ref for MFA completion
+                # MFA required, store entry ref for MFA completion
                 self._reauth_entry = reconfigure_entry
                 return await self.async_step_mfa()
 
@@ -269,7 +269,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.password = user_input[CONF_PASSWORD]
             session = async_get_clientsession(self.hass)
-            # Preserve install_id from the reauth entry — a fresh UUID would
+            # Preserve install_id from the reauth entry, a fresh UUID would
             # make the Yale server treat this as a new device and demand MFA.
             install_id: str | None = None
             if self._reauth_entry:

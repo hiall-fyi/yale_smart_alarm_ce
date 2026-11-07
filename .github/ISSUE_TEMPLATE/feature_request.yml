@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A couple of things worth knowing before you write, so you know where the
+        edges are. The hubs are cloud-only, so anything needing local control or
+        instant push updates isn't possible from this side. Per-sensor motion and
+        temperature readings are both deliberately left out for reasons in the
+        README's Known limitations table. Requests in those areas are still worth
+        logging so they're tracked, that's the honest scope rather than a "no".
+  - type: checkboxes
+    attributes:
+      label: Before you start
+      options:
+        - label: I have searched the existing issues and discussions for this
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that you can't do today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed solution
+      description: How you imagine it working, if you have a shape in mind.
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Which hardware would this apply to?
+      placeholder: e.g. outdoor siren, Conexis L2, keypad
+  - type: textarea
+    id: app_behaviour
+    attributes:
+      label: Does the Yale Home app do this already?
+      description: >
+        If the app can do it, the API almost certainly supports it and this
+        becomes much easier to add. A screenshot of where it sits in the app
+        helps a lot.
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Existing workaround, if any

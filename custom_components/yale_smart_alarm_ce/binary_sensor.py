@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     from .coordinator import AlarmData, YaleConfigEntry, YaleDataUpdateCoordinator
 
-# Coordinator centralises data updates — no per-entity parallel limit needed.
+# Coordinator centralises data updates, so no per-entity limit is needed.
 PARALLEL_UPDATES = 0
 
 

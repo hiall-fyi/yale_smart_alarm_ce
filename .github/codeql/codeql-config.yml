@@ -1,0 +1,11 @@
+name: "yale_smart_alarm_ce CodeQL config"
+
+queries:
+  - uses: security-and-quality
+
+# Excluded: CodeQL flags `DataUpdateCoordinator` in coordinator.py as an unused
+# import although it is the base class of YaleDataUpdateCoordinator. ruff
+# already reports genuinely unused imports (F401) without that blind spot.
+query-filters:
+  - exclude:
+      id: py/unused-import

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.diagnostics import async_redact_data
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from homeassistant.core import HomeAssistant
 
     from .coordinator import YaleConfigEntry
@@ -81,6 +83,57 @@ TO_REDACT_DATA: set[str] = {
 }
 
 
+def _build_id_labels(identifiers: Iterable[str], label: str) -> dict[str, str]:
+    """Map each identifier to a positional placeholder.
+
+    One shared map per identifier kind, so a lock that appears in some
+    sections but not others (a failed per-lock fetch) keeps the same
+    placeholder everywhere it does appear.
+    """
+    return {
+        identifier: f"{label}_{index}"
+        for index, identifier in enumerate(sorted(identifiers))
+    }
+
+
+def _relabel(mapping: dict[str, Any], labels: dict[str, str]) -> dict[str, Any]:
+    """Rewrite a mapping's identifier keys using *labels*."""
+    return {labels.get(key, key): value for key, value in mapping.items()}
+
+
+def _redact_coordinator_data(data: Any) -> dict[str, Any]:
+    """Redact coordinator data, including the ID-keyed section keys.
+
+    ``async_redact_data`` rewrites values only, and these sections are
+    keyed by the same alarm, lock and device identifiers it scrubs one
+    level down.
+    """
+    redacted: dict[str, Any] = async_redact_data(data, TO_REDACT_DATA)
+
+    lock_ids: set[str] = set()
+    for section in ("locks", "lock_status", "lock_details"):
+        entries = redacted.get(section)
+        if isinstance(entries, dict):
+            lock_ids.update(entries)
+    lock_labels = _build_id_labels(lock_ids, "lock")
+    for section in ("locks", "lock_status", "lock_details"):
+        entries = redacted.get(section)
+        if isinstance(entries, dict):
+            redacted[section] = _relabel(entries, lock_labels)
+
+    alarms = redacted.get("alarms")
+    if isinstance(alarms, dict):
+        for alarm in alarms.values():
+            devices = alarm.get("device_index") if isinstance(alarm, dict) else None
+            if isinstance(devices, dict):
+                alarm["device_index"] = _relabel(
+                    devices, _build_id_labels(devices, "device"),
+                )
+        redacted["alarms"] = _relabel(alarms, _build_id_labels(alarms, "alarm"))
+
+    return redacted
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: YaleConfigEntry,
@@ -89,7 +142,5 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     return {
         "config_entry": async_redact_data(entry.data, TO_REDACT_CONFIG),
-        "coordinator_data": async_redact_data(
-            coordinator.data, TO_REDACT_DATA,
-        ),
+        "coordinator_data": _redact_coordinator_data(coordinator.data),
     }

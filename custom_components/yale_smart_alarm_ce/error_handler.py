@@ -87,7 +87,7 @@ def async_handle_errors(
                 return await func(self, *args, **kwargs)
             except YaleAuthenticationError:
                 _LOGGER.error(
-                    "Authentication error during %s — token may have expired",
+                    "Authentication error during %s, token may have expired",
                     operation,
                 )
                 raise HomeAssistantError(

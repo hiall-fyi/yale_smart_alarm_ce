@@ -4,6 +4,23 @@ All notable changes to Yale Smart Alarm CE are documented here.
 
 ---
 
+## 1.1.0 — Home Assistant 2026.11 Support, Arming State and Diagnostics Fixes (unreleased)
+
+### Improvements
+
+- **Home Assistant 2026.11.0 or newer is now required** — The integration now builds its setup forms and service schemas with the validation library Home Assistant 2026.11 itself uses. Home Assistant will not load it on an older version, so if you haven't updated yet, stay on 1.0.0 until you do.
+- **Devices attach to their alarm hub with the field Home Assistant keeps** — 1.0.0 used `via_device`, which Home Assistant has deprecated and will stop accepting in 2027.8. Devices now use `via_device_id`, so they stay grouped under the alarm hub after that release.
+- **Removing a device that has disappeared from your Yale account uses the current Home Assistant lookup** — The cleanup that drops devices Yale no longer lists used a device-registry call that Home Assistant has deprecated and will remove in 2027.8. It now uses the replacement, so the cleanup keeps working after that release.
+
+### Bug Fixes
+
+- **The alarm no longer reports itself disarmed while it is arming** — Restarting Home Assistant, or reloading the integration, during an exit-delay countdown showed the panel as "Disarmed" until the hub finished arming. Changing any option reloads the integration, so this was easy to hit without restarting anything. The state was published rather than just displayed, so an automation triggering on the alarm being disarmed would run while you were still walking out of the house. The countdown is only ever reported once, in the reply to the arm command, so the panel now remembers it across a restart.
+- **An implausible exit delay from Yale no longer pins the panel on "Arming"** — Yale sends the countdown end as a timestamp, and nothing in the API guarantees it is sensible. A value far in the future left the panel stuck showing "Arming" for as long as that timestamp named, and only disarming would clear it. Countdown times beyond any real exit delay are now ignored, so the panel falls back to the hub's own armed state.
+- **"Unrecognised arm state" warnings no longer fill the log** — Yale defines a fourth arm state for an area that hasn't reported one yet, which the integration treated as unexpected and logged a warning about. Home Assistant re-reads the alarm state constantly, so a single occurrence repeated the warning indefinitely. That state is now expected, and any genuinely unknown value is logged once instead of on every read.
+- **Diagnostics no longer leave Yale identifiers in plain text** — The download redacted your alarm ID, lock IDs and serial numbers where they appeared as values, but the same strings were still readable as the labels those sections are filed under. Since the usual reason to download diagnostics is to attach them to a bug report, the file was showing more than it looked like it was showing. Identifiers are now replaced with plain counters (`alarm_0`, `lock_0`, `device_0`), and a lock keeps the same counter in every section so the file is still readable when you're reading it yourself. These are account-scoped identifiers rather than passwords or keys, and getting at your system still needs your Yale login, so there's nothing to go back and revoke.
+
+---
+
 ## 1.0.0 — First Stable Release (2026-05-20)
 
 End of beta. Big thanks to the testers whose bug reports and
