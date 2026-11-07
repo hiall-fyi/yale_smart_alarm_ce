@@ -1,0 +1,163 @@
+name: Bug report
+description: Something in Yale Smart Alarm CE isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. A few quick details up front
+        save a lot of back-and-forth. A diagnostics download and a debug log are
+        the two most useful things, and there are links below for both.
+  - type: checkboxes
+    attributes:
+      label: Before you start
+      options:
+        - label: I have searched the existing issues and discussions for this
+          required: true
+        - label: I'm running the latest Yale Smart Alarm CE release shown in HACS
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Which Yale alarm do you have?** This integration only works with the
+        newer hubs that pair with the **Yale Home** app. If yours uses the older
+        Yale Home View / Yale Smart Living app, you want Home Assistant's
+        official `yale_smart_alarm` integration instead. The README has a
+        side-by-side comparison if you're not sure.
+  - type: input
+    id: yale_ce_version
+    attributes:
+      label: Yale Smart Alarm CE version
+      description: Copy it from the integration's device page rather than typing from memory.
+      placeholder: e.g. 1.1.0
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: This release needs Home Assistant 2026.11.0 or newer; older versions aren't supported.
+      placeholder: e.g. 2026.11.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install_type
+    attributes:
+      label: Home Assistant installation type
+      options:
+        - HA OS
+        - Container
+        - Supervised
+        - Core
+    validations:
+      required: true
+  - type: dropdown
+    id: region
+    attributes:
+      label: Which region did you pick during setup?
+      description: Only Global is tested directly, so this narrows things down fast.
+      options:
+        - Global (EU, UK, US)
+        - China
+        - Korea (Gateman)
+        - Australia / NZ (Lockwood)
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: alarm_state
+    attributes:
+      label: Was the alarm armed or disarmed when this happened?
+      description: >
+        Yale rejects most setting changes while armed (HTTP 412), so this rules
+        a whole class of problem in or out.
+      options:
+        - Disarmed
+        - Armed home
+        - Armed away
+        - Mid arming (during the exit delay)
+        - Not applicable
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Which hardware is involved?
+      description: Tick everything that applies.
+      options:
+        - label: Alarm hub
+        - label: Door / window contact sensor
+        - label: Shock sensor
+        - label: Motion sensor (PIR)
+        - label: Indoor or outdoor siren
+        - label: Keypad
+        - label: Keyfob
+        - label: Smoke sensor
+        - label: Panic button
+        - label: Smart lock
+        - label: Doorbell
+  - type: markdown
+    attributes:
+      value: |
+        **Already known and not bugs:** there's no per-sensor motion entity, no
+        temperature sensors, and no local control (the hubs are cloud-only, so
+        state arrives on a poll rather than instantly). The Known limitations table
+        in the README explains each one. If your report is one of those, it's still
+        worth raising as a feature request or in Discussions so it's tracked.
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+    validations:
+      required: true
+  - type: input
+    id: entity
+    attributes:
+      label: Which specific entity or device?
+      placeholder: e.g. alarm_control_panel.yale_alarm_hub_alarm, or lock.front_door
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics download
+      description: >
+        The most useful single attachment, and it's redacted automatically
+        (PIN codes, lock user names, encryption keys, serial numbers, account
+        email). Get it from Settings → Devices & Services → Yale Smart Alarm CE
+        → the three-dot menu on the integration → Download diagnostics. Drag
+        the file into this box.
+  - type: textarea
+    id: debug_log
+    attributes:
+      label: Debug log
+      description: >
+        Not required, but without it most issues are slow to pin down. Turning
+        it on takes a config edit and a restart, see the "Enable debug logging"
+        section under Troubleshooting in the README:
+        https://github.com/hiall-fyi/yale_smart_alarm_ce#troubleshooting
+        Paste the relevant lines (filter the log by yale_smart_alarm_ce).
+      render: text
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce (if you can)
+  - type: textarea
+    id: already_tried
+    attributes:
+      label: What have you already tried?
+      placeholder: e.g. reloaded the integration, re-authenticated from Settings → Repairs, checked the hub is online in the Yale Home app
+  - type: checkboxes
+    attributes:
+      label: Anything else worth mentioning?
+      description: Optional, helps rule things in or out.
+      options:
+        - label: It also behaves this way in the Yale Home app
+        - label: It started after updating Yale Smart Alarm CE
+        - label: It started after updating Home Assistant
+        - label: I have more than one area / zone on the alarm
+        - label: I changed the polling interval from the default
+        - label: There's a repair notice under Settings → Repairs

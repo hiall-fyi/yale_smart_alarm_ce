@@ -56,6 +56,11 @@ _INHIBIT_CODE_DESCRIPTIONS: dict[str, str] = {
     "TAMPER_IS_OPEN": "tamper",
 }
 
+# Longest exit delay treated as a real countdown.  An out-of-range
+# ``exitTime`` would otherwise hold the ARMING state open for as long as it
+# names, with only a disarm able to clear it.
+_MAX_EXIT_DELAY_MS = 15 * 60 * 1000  # 15 minutes
+
 type YaleConfigEntry = ConfigEntry[YaleDataUpdateCoordinator]
 
 
@@ -77,7 +82,7 @@ class YaleCoordinatorData(TypedDict):
         doorbells: doorbell_id → raw doorbell dict from ``GET /users/doorbells/mine``.
 
     Lock dicts remain ``dict[str, Any]`` because the Yale API has no
-    formal schema — fields vary by device model and firmware version.
+    formal schema, and fields vary by device model and firmware version.
     Typing them more strictly would create a maintenance burden without
     meaningful safety gains.
     """
@@ -123,18 +128,37 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
         """Return the exit delay end timestamp (ms) for *area_id*, or 0."""
         return self._area_exit_delay_end_ms.get(area_id, 0)
 
-    def _record_exit_delay(self, area_ids: list[str], exit_time: int) -> None:
+    def restore_exit_delay(self, area_id: str, exit_time: Any) -> None:
+        """Seed *area_id*'s exit delay from a restored entity state.
+
+        An end that has already passed needs no special case: it reads as
+        disarmed, and a disarm clears it.
+        """
+        self._record_exit_delay([area_id], exit_time)
+
+    def _record_exit_delay(self, area_ids: list[str], exit_time: Any) -> None:
         """Record the exit delay end timestamp for one or more areas.
 
         *exit_time* of 0 means the backend reported no exit delay; in
         that case we do not write anything so a prior delay for the
-        same area is not silently overwritten by zero noise — the arm
-        state itself will transition to ARMED on the next poll.
+        same area is not silently overwritten by zero noise, the arm
+        state itself will transition to ARMED on the next poll.  A value
+        further off than ``_MAX_EXIT_DELAY_MS`` is treated the same way,
+        since nothing else would clear it.
+
+        Accepts ``Any`` so a non-int value from the Yale API cannot raise
+        into the arm flow; anything unparseable is treated as "no delay
+        reported".
         """
-        if exit_time <= 0:
+        try:
+            exit_time_int = int(exit_time)
+        except (TypeError, ValueError):
+            return
+        now_ms = time.time() * 1000
+        if not 0 < exit_time_int < now_ms + _MAX_EXIT_DELAY_MS:
             return
         for area_id in area_ids:
-            self._area_exit_delay_end_ms[area_id] = exit_time
+            self._area_exit_delay_end_ms[area_id] = exit_time_int
 
     def _clear_exit_delay(self, area_ids: list[str]) -> None:
         """Clear any recorded exit delay for *area_ids* (disarm path)."""
@@ -160,7 +184,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
             raise
         except (YaleError, aiohttp.ClientError):
             _LOGGER.warning(
-                "Failed to fetch devices for alarm %s — "
+                "Failed to fetch devices for alarm %s: "
                 "they will appear on the next successful poll",
                 alarm_id,
             )
@@ -168,7 +192,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
         skipped = [d for d in devices if "_id" not in d]
         if skipped:
             _LOGGER.warning(
-                "Alarm %s: %d device(s) skipped — the Yale API returned devices without an ID",
+                "Alarm %s: %d device(s) skipped, the Yale API returned devices without an ID",
                 alarm_id,
                 len(skipped),
             )
@@ -203,7 +227,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
             authenticated = await self.api.authenticate()
             if not authenticated:
                 async_create_auth_issue(self.hass)
-                msg = "Authentication requires MFA — reconfigure the integration"
+                msg = "Authentication requires MFA, reconfigure the integration"
                 raise ConfigEntryAuthFailed(msg)
         except YaleAuthenticationError as err:
             async_create_auth_issue(self.hass)
@@ -278,7 +302,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
                 ) from result
             if isinstance(result, BaseException):
                 _LOGGER.warning(
-                    "Unexpected error while fetching alarm devices — "
+                    "Unexpected error while fetching alarm devices: "
                     "some devices may be temporarily missing",
                 )
                 continue
@@ -301,7 +325,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
     ) -> None:
         """Fetch status/details for each lock in parallel and populate *data*.
 
-        Individual lock failures are isolated — a single problematic lock
+        Individual lock failures are isolated, a single problematic lock
         does not prevent other locks or alarms from loading.  Auth errors
         always propagate (they affect all endpoints).
         """
@@ -326,10 +350,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
                     msg, retry_after=result.retry_after_seconds,
                 ) from result
             if isinstance(result, (YaleError, aiohttp.ClientError)):
-                _LOGGER.warning("Failed to fetch data for lock %s — it will update on the next poll", lock_id)
+                _LOGGER.warning("Failed to fetch data for lock %s, it will update on the next poll", lock_id)
                 continue
             if isinstance(result, BaseException):
-                _LOGGER.warning("Unexpected error while fetching lock %s — it will update on the next poll", lock_id)
+                _LOGGER.warning("Unexpected error while fetching lock %s, it will update on the next poll", lock_id)
                 continue
             _, status, details = result
             data["lock_status"][lock_id] = status
@@ -338,7 +362,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
     async def _async_fetch_doorbells(self, data: YaleCoordinatorData) -> None:
         """Fetch doorbells and populate *data['doorbells']*.
 
-        Errors are isolated — a doorbell failure must not prevent
+        Errors are isolated, a doorbell failure must not prevent
         alarms or locks from loading.
         """
         try:
@@ -358,7 +382,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
             ) from err
         except (YaleError, aiohttp.ClientError):
             _LOGGER.warning(
-                "Failed to fetch doorbells — "
+                "Failed to fetch doorbells: "
                 "they will appear on the next successful poll",
             )
 
@@ -381,14 +405,14 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
             stale_ids = self.previous_device_ids - current_device_ids
             if stale_ids:
                 # If devices vanished but an alarm has an empty device_index,
-                # the API likely returned a partial response — skip cleanup.
+                # the API likely returned a partial response, skip cleanup.
                 has_empty_alarm = any(
                     not alarm_data_item["device_index"]
                     for alarm_data_item in data["alarms"].values()
                 )
                 if has_empty_alarm:
                     _LOGGER.debug(
-                        "Skipping stale device cleanup — %d device(s) missing "
+                        "Skipping stale device cleanup - %d device(s) missing "
                         "but an alarm returned an empty device list "
                         "(likely partial API response)",
                         len(stale_ids),
@@ -397,8 +421,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
 
                 device_registry = dr.async_get(self.hass)
                 for stale_id in stale_ids:
-                    device = device_registry.async_get_device(
-                        identifiers={(DOMAIN, stale_id)},
+                    device = device_registry.async_get_device_by_identifier(
+                        (DOMAIN, stale_id), self.config_entry.entry_id,
                     )
                     if device:
                         _LOGGER.info(
@@ -468,7 +492,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
         )
 
         # Step 2: process alarm devices, lock details, and doorbells in parallel
-        # (each writes to separate keys in data — no race conditions)
+        # (each writes to separate keys in data, no race conditions)
         await asyncio.gather(
             self._async_process_alarm_results(alarms, data),
             self._async_process_lock_results(data),
@@ -481,7 +505,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
 
         Two-layer retry design:
             Layer 1 (API client ``_request()``): retries transport-level
-            errors — HTTP 403 (CDN/WAF), ``ClientConnectionError``, and
+            errors: HTTP 403 (CDN/WAF), ``ClientConnectionError``, and
             ``TimeoutError``.  Up to ``_MAX_HTTP_403_RETRIES`` /
             ``_MAX_NETWORK_RETRIES`` attempts.
 
@@ -495,7 +519,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
 
         Auth errors (``ConfigEntryAuthFailed``) and rate-limit errors
         (``UpdateFailed`` wrapping ``YaleRateLimitError``) are never
-        retried — they propagate immediately.
+        retried, they propagate immediately.
         """
         last_exc: UpdateFailed | None = None
 
@@ -522,7 +546,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
                 await asyncio.sleep(delay)
                 continue
 
-            # Success — clear repair issues and do post-processing
+            # Success, clear repair issues and do post-processing
             async_delete_auth_issue(self.hass)
             async_delete_rate_limit_issue(self.hass)
             self._cleanup_stale_devices(data)
@@ -550,7 +574,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
         raise last_exc
 
     # ------------------------------------------------------------------
-    # Action methods — entities delegate here instead of calling api directly
+    # Action methods, entities delegate here instead of calling api directly
     # ------------------------------------------------------------------
 
     async def async_disarm(self, alarm_id: str, area_ids: list[str]) -> None:
@@ -649,14 +673,14 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[YaleCoordinatorData]):
     async def _safe_refresh(self, action: str) -> None:
         """Request a coordinator refresh, logging but not raising on failure.
 
-        The action itself already succeeded — a refresh failure should
+        The action itself already succeeded, a refresh failure should
         not be reported as an action failure to the user.
         """
         try:
             await self.async_request_refresh()
-        except Exception:  # noqa: BLE001 — refresh failure must not mask a successful action
+        except Exception:  # noqa: BLE001 - refresh failure must not mask a successful action
             _LOGGER.warning(
-                "Command '%s' succeeded but the status refresh failed — "
+                "Command '%s' succeeded but the status refresh failed: "
                 "the dashboard will update on the next poll cycle",
                 action,
             )

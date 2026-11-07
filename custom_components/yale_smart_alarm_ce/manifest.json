@@ -1,6 +1,5 @@
 {
   "domain": "yale_smart_alarm_ce",
-  "homeassistant": "2025.11.0",
   "name": "Yale Smart Alarm CE",
   "codeowners": ["@hiall-fyi"],
   "config_flow": true,
@@ -9,5 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/hiall-fyi/yale_smart_alarm_ce/issues",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

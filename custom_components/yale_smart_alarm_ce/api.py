@@ -50,14 +50,14 @@ _HTTP_CONFLICT = 409
 _HTTP_PRECONDITION_FAILED = 412
 _HTTP_TOO_MANY_REQUESTS = 429
 
-# 403 retry configuration — transient CDN/WAF blocks
+# 403 retry configuration for transient CDN/WAF blocks
 _MAX_HTTP_403_RETRIES = 3
 _HTTP_403_RETRY_BASE_DELAY = 2
 
-# Network retry configuration — transient connection errors
+# Network retry configuration for transient connection errors
 _MAX_NETWORK_RETRIES = 3
-_NETWORK_RETRY_BASE_DELAY = 2  # seconds — exponential: 2s, 4s, 8s
-_NETWORK_RETRY_MAX_DELAY = 30  # seconds — cap to prevent runaway delays
+_NETWORK_RETRY_BASE_DELAY = 2  # seconds, exponential: 2s, 4s, 8s
+_NETWORK_RETRY_MAX_DELAY = 30  # seconds, cap to prevent runaway delays
 
 # Rate limit (HTTP 429) Retry-After sanitization
 _RATE_LIMIT_MIN_S = 10      # minimum wait
@@ -108,6 +108,7 @@ class YaleApiClient:
         email: str,
         password: str,
         api_key: str | None = None,
+        *,
         region: str | None = None,
         install_id: str | None = None,
     ) -> None:
@@ -150,7 +151,7 @@ class YaleApiClient:
         """
         if resp.status == _HTTP_UNAUTHORIZED:
             _LOGGER.debug("Authentication failed (HTTP 401) on %s", resp.url.path)
-            msg = "Authentication failed — please reconfigure the integration"
+            msg = "Authentication failed, please reconfigure the integration"
             raise YaleAuthenticationError(msg)
 
         if resp.status == _HTTP_TOO_MANY_REQUESTS:
@@ -209,15 +210,15 @@ class YaleApiClient:
         """Execute an API request with retry for transient errors.
 
         Retries on:
-        - HTTP 403 (transient CDN/WAF blocks) — clears tokens, rebuilds headers.
-        - Network errors (``ClientConnectionError``, ``TimeoutError``) — for
+        - HTTP 403 (transient CDN/WAF blocks): clears tokens, rebuilds headers.
+        - Network errors (``ClientConnectionError``, ``TimeoutError``): for
           idempotent methods (GET/PUT/DELETE).  POST only retries connection
           errors (not timeouts) because the server may have received the request.
 
         Never retries:
-        - HTTP 401 (``YaleAuthenticationError``) — propagates immediately.
-        - HTTP 429 (``YaleRateLimitError``) — propagates immediately.
-        - Parse errors (``ContentTypeError``, ``ValueError``) — not transient.
+        - HTTP 401 (``YaleAuthenticationError``): propagates immediately.
+        - HTTP 429 (``YaleRateLimitError``): propagates immediately.
+        - Parse errors (``ContentTypeError``, ``ValueError``): not transient.
 
         Raises:
             YaleAuthenticationError: On HTTP 401, or 403 after retries exhausted.
@@ -245,7 +246,7 @@ class YaleApiClient:
                         if http_403_count < _MAX_HTTP_403_RETRIES:
                             delay = random.uniform(0, _HTTP_403_RETRY_BASE_DELAY ** http_403_count)
                             _LOGGER.warning(
-                                "Yale API returned 403 on %s (attempt %d/%d) — retrying in %.1fs",
+                                "Yale API returned 403 on %s (attempt %d/%d), retrying in %.1fs",
                                 endpoint,
                                 http_403_count,
                                 _MAX_HTTP_403_RETRIES,
@@ -314,7 +315,7 @@ class YaleApiClient:
                 msg = f"Invalid JSON in API response: {err}"
                 raise YaleApiError(msg) from err
 
-        # Safety net — should not reach here
+        # Safety net, should not be reachable
         if last_conn_err is not None:
             raise last_conn_err
         msg = f"Request to {endpoint} failed after {max_attempts} attempts"
@@ -336,7 +337,7 @@ class YaleApiClient:
             "POST", API_SIGNIN, use_auth_url=True, include_token=False, json=data,
         )
         self.step_token = headers.get("x-step-token")
-        # Some accounts skip MFA — the access token arrives directly in step1
+        # Some accounts skip MFA, so the access token arrives directly in step1
         access = headers.get("x-access-token")
         if access:
             self.access_token = access
@@ -348,7 +349,7 @@ class YaleApiClient:
     async def authenticate_step2_send_code(self) -> bool:
         """Perform step 2: request a verification code via email."""
         if not self.step_token:
-            msg = "No step token — call authenticate_step1 first"
+            msg = "No step token, call authenticate_step1 first"
             raise ValueError(msg)
 
         headers = self._get_headers(include_token=False)
@@ -367,7 +368,7 @@ class YaleApiClient:
     async def authenticate_step3_validate(self, code: str) -> bool:
         """Perform step 3: validate the verification code and obtain an access token."""
         if not self.step_token:
-            msg = "No step token — call authenticate_step1 first"
+            msg = "No step token, call authenticate_step1 first"
             raise ValueError(msg)
 
         headers = self._get_headers(include_token=False)
@@ -402,7 +403,7 @@ class YaleApiClient:
             if result.get("needVerify"):
                 await self.authenticate_step2_send_code()
                 return False  # Caller must re-call with verification_code
-            # No MFA required — step1 granted access_token via response headers
+            # No MFA required, step1 granted access_token via response headers
             if self.access_token:
                 return True
 
@@ -410,7 +411,7 @@ class YaleApiClient:
             await self.authenticate_step3_validate(verification_code)
             return True
 
-        # step_token exists but no code provided — waiting for MFA input
+        # step_token exists but no code provided, waiting for MFA input
         return False
 
     # ------------------------------------------------------------------

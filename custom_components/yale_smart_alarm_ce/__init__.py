@@ -1,21 +1,27 @@
 """Yale Smart Alarm CE integration for Home Assistant."""
 from __future__ import annotations
 
+import functools
 import logging
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant.const import Platform
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from .const import CMD_FULL_ARM, CMD_PARTIAL_ARM, DOMAIN
-from .coordinator import YaleConfigEntry, YaleDataUpdateCoordinator
+from .coordinator import AlarmData, YaleConfigEntry, YaleDataUpdateCoordinator
+from .entity import (
+    build_alarm_hub_device_info,
+    clear_cached_hub_device_id,
+    set_cached_hub_device_id,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
-    from homeassistant.helpers import device_registry as dr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,17 +50,14 @@ SERVICE_FORCE_ARM_SCHEMA = vol.Schema({
 })
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
-    """Migrate config entry to a new schema version (no-op for VERSION=1)."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
     """Set up Yale Smart Alarm CE from a config entry."""
     coordinator = YaleDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    _register_alarm_hub_devices(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
@@ -91,14 +94,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
             coord: YaleDataUpdateCoordinator = config_entry.runtime_data
 
             # Extract alarm_id from the entity unique_id.
-            # Format: "{alarm_id}_{area_id}" — alarm_id is 32-char hex (no underscores).
+            # Format: "{alarm_id}_{area_id}", alarm_id is 32-char hex (no underscores).
             unique_id = entity_entry.unique_id or ""
             alarm_id = unique_id.split("_")[0] if unique_id else ""
             if not alarm_id or alarm_id not in coord.data.get("alarms", {}):
                 msg = f"Cannot determine alarm ID for {entity_id}"
                 raise ServiceValidationError(msg)
 
-            # Source area IDs from areaArmState — same as alarm_control_panel.
+            # Source area IDs from areaArmState, same as alarm_control_panel.
             alarm_data = coord.data["alarms"][alarm_id]
             info = alarm_data.get("info") or {}
             status = info.get("status") or {}
@@ -109,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
             ]
             if not area_ids:
                 msg = (
-                    f"No areas available for {entity_id} — the alarm has "
+                    f"No areas available for {entity_id}, the alarm has "
                     "not yet returned area state from Yale, try again in a "
                     "few seconds"
                 )
@@ -125,6 +128,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
         )
 
     return True
+
+
+def _register_alarm_hub_devices(
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    coordinator: YaleDataUpdateCoordinator,
+) -> None:
+    """Pre-register every alarm hub so its attached devices can reference it via_device_id.
+
+    One config entry can carry several alarms, so every alarm_id needs its own
+    pre-registration and its own cached registry id, not just one.
+    """
+    device_registry = dr.async_get(hass)
+    alarms: dict[str, AlarmData] = coordinator.data.get("alarms") or {}
+    for alarm_id, alarm in alarms.items():
+        try:
+            hub_info = build_alarm_hub_device_info(alarm_id, alarm.get("info") or {})
+            device_entry = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id, **hub_info,
+            )
+            set_cached_hub_device_id(alarm_id, device_entry.id)
+        except HomeAssistantError:
+            _LOGGER.warning(
+                "Setup: could not pre-register alarm hub %s, its devices will "
+                "register unparented this session",
+                alarm_id,
+                exc_info=True,
+            )
+        entry.async_on_unload(
+            functools.partial(clear_cached_hub_device_id, alarm_id),
+        )
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
@@ -158,7 +192,7 @@ async def async_remove_config_entry_device(
     # Check if any of the device's identifiers are still in coordinator data.
     # NOTE: If the coordinator has never successfully fetched data (e.g.
     # persistent auth failure), previous_device_ids is empty and all
-    # devices become removable.  This is intentional — a non-functional
+    # devices become removable.  This is intentional: a non-functional
     # coordinator cannot verify which devices still exist, so we allow
     # the user to clean up manually.
     for identifier in device_entry.identifiers:

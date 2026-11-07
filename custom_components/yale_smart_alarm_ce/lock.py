@@ -59,12 +59,12 @@ class YaleLock(YaleLockEntity, LockEntity):
         super().__init__(coordinator, lock_id)
         self._attr_unique_id = lock_id
         self._attr_translation_key = "lock"
-        # Last known valid locked state — prevents false "unlocked" on API errors
+        # Last known valid locked state, prevents false "unlocked" on API errors
         self._last_known_locked: bool | None = None
         self._unknown_logged: bool = False
 
     # ------------------------------------------------------------------
-    # State tracking — moved out of property to avoid side-effects
+    # State tracking, moved out of property to avoid side-effects
     # ------------------------------------------------------------------
 
     @callback
@@ -107,14 +107,14 @@ class YaleLock(YaleLockEntity, LockEntity):
         if not self._unknown_logged:
             lock_label = self.lock_data.get("LockName") or self._lock_id
             _LOGGER.warning(
-                "Lock %s reported unclear status '%s' — no previous state available, showing as unknown",
+                "Lock %s reported unclear status '%s', no previous state available, showing as unknown",
                 lock_label,
                 self.lock_status.get("status"),
             )
             self._unknown_logged = True
         else:
             _LOGGER.debug(
-                "Lock %s still reporting unclear status '%s' — showing as unknown",
+                "Lock %s still reporting unclear status '%s', showing as unknown",
                 self._lock_id,
                 self.lock_status.get("status"),
             )
@@ -140,7 +140,7 @@ class YaleLock(YaleLockEntity, LockEntity):
         """Return True if the entity has usable state.
 
         Available whenever the coordinator is healthy and lock status
-        data exists — regardless of whether the lock/unlock position
+        data exists, regardless of whether the lock/unlock position
         is known.  An ``"unknown"`` API status keeps the entity
         available; ``is_locked`` handles the uncertainty.
         """

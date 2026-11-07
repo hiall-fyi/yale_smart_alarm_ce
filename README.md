@@ -2,29 +2,13 @@
 
 <div align="center">
 
-<!-- Platform Badges -->
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.11.0+-blue?style=for-the-badge&logo=home-assistant)
-![Python](https://img.shields.io/badge/Python-3.13%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![Yale](https://img.shields.io/badge/Yale-Smart%20Alarm-yellow?style=for-the-badge)
-![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.11.0+-blue?style=for-the-badge&logo=home-assistant) ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge) ![Stable](https://img.shields.io/badge/Stable-1.1.0-brightgreen?style=for-the-badge) ![License](https://img.shields.io/badge/License-AGPL--3.0-lightgrey?style=for-the-badge)
 
-<!-- Status Badges -->
-![Version](https://img.shields.io/badge/Version-1.0.0-purple?style=for-the-badge)
-![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github) [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/hiallfyi)
 
-<!-- Community Badges -->
-![GitHub stars](https://img.shields.io/github/stars/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github)
-![GitHub forks](https://img.shields.io/github/forks/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github)
-![GitHub issues](https://img.shields.io/github/issues/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github)
-![GitHub last commit](https://img.shields.io/github/last-commit/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github)
+**Yale Smart Alarm CE brings the newer Yale Smart Alarm hubs (the ones that use the Yale Home app) into Home Assistant: arm and disarm per area, see every sensor, lock and doorbell, and adjust hub settings, with no third-party libraries.**
 
-<!-- Support -->
-[![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/hiallfyi)
-
-A Home Assistant integration for the new Yale Smart Alarm range — the hubs that pair with the Yale Home app and the `aaecosystem` cloud.
-
-[Quick Start](#quick-start) • [Features](#features) • [Entities](#entities) • [Supported Devices](#supported-devices) • [Troubleshooting](#troubleshooting) • [Discussions](https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions)
+[Quick Start](#quick-start) • [Features](#features) • [Entities](#entities) • [Supported Devices](#supported-devices) • [Known limitations](#known-limitations) • [Troubleshooting](#troubleshooting) • [Discussions](https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions)
 
 </div>
 
@@ -52,7 +36,7 @@ If you bought your hub recently and use the Yale Home app, you want this integra
 
 ## Quick start
 
-**You'll need:** Home Assistant 2025.11 or newer, and a Yale account that already works with the Yale Home app.
+**You'll need:** Home Assistant 2026.11 or newer, and a Yale account that already works with the Yale Home app.
 
 ### 1. Install via HACS
 
@@ -134,7 +118,7 @@ Click the gear icon on the integration card. The default is 30 seconds; you can 
 - Door / window contact sensors, including outdoor and shock variants.
 - Smoke sensors with fault and detection state.
 - Panic buttons (RF).
-- PIR motion sensors at the device level — battery, connectivity, tamper. The per-sensor motion state isn't currently exposed; see [Limitations](#limitations).
+- PIR motion sensors at the device level — battery, connectivity, tamper. The per-sensor motion state isn't currently exposed; see [Limitations](#known-limitations).
 - Doorbell press detection.
 
 ### Locks
@@ -269,8 +253,8 @@ Some devices were tested directly during development; others were confirmed by b
 | Door / Window Contact Sensor | Contact | ✅ Tested |
 | Outdoor Contact Sensor | Contact | ✅ Community verified |
 | Shock Sensor | Contact | ✅ Tested |
-| Indoor Motion Sensor (PIR) | Motion | ⚠️ Partial (see [Limitations](#limitations)) |
-| Outdoor Motion Sensor | Motion | ⚠️ Partial (see [Limitations](#limitations)) |
+| Indoor Motion Sensor (PIR) | Motion | ⚠️ Partial (see [Limitations](#known-limitations)) |
+| Outdoor Motion Sensor | Motion | ⚠️ Partial (see [Limitations](#known-limitations)) |
 | Indoor Siren | Siren | ✅ Tested |
 | Outdoor Siren | Siren | ✅ Community verified |
 | Keypad | Keypad | ✅ Tested |
@@ -297,7 +281,9 @@ If you've got hardware on the Untested list, please post in [Discussions](https:
 
 ---
 
-## Limitations
+## Known limitations
+
+These are how the integration or Yale's cloud works today, not bugs. Check here before opening a report.
 
 | Limitation | Detail |
 |---|---|
@@ -362,7 +348,14 @@ Then check **Settings → System → Logs**, filtered by `yale_smart_alarm_ce`.
 
 </details>
 
-For anything else, [open an issue](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues) with a diagnostics download (it's redacted automatically) and a few minutes of debug logs covering the problem.
+<details>
+<summary><strong>Can I run this alongside the official Yale integration?</strong></summary>
+
+Yes. The two use different domains (`yale_smart_alarm_ce` and `yale_smart_alarm`) and talk to different clouds, so they don't interfere. Most households only need one, since which one you want depends on whether your hub uses the Yale Home app or the older Yale Home View / Smart Living app.
+
+</details>
+
+For anything else, search the existing [issues](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues), and if it's new, [open a bug report](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/new/choose). The form asks for your versions, region, whether the alarm was armed, a diagnostics download (redacted automatically) and a few minutes of debug logs covering the problem, which is what turns a back-and-forth into a quick fix.
 
 ---
 
@@ -505,22 +498,13 @@ See [LICENSE](LICENSE) for full details.
 
 ## Contributing
 
-Contributions are welcome. The usual flow:
+Most of what this integration does comes from user reports, device confirmations and testing. If you've hit a problem, [open a bug report](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/new/choose); if you have hardware on the Untested list or want to suggest something, [start a Discussion](https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions). A diagnostics download and a snippet of debug logs make the difference between a same-day fix and a round of questions.
 
-1. Fork the repository.
-2. Create a feature branch — `git checkout -b feature/your-change`.
-3. Commit your work.
-4. Push and open a Pull Request.
+Code contributions are welcome too: fork, branch, commit and open a Pull Request. Float the idea in Discussions first if it's a big one.
 
-Feature ideas and questions are best raised in [Discussions](https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions). Bug reports go in [Issues](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues) — a diagnostics download and a snippet of debug logs go a long way.
+To report a security problem privately, see [SECURITY.md](SECURITY.md).
 
 ---
-
-<div align="center">
-
-[![Star History Chart](https://api.star-history.com/svg?repos=hiall-fyi/yale_smart_alarm_ce&type=Date)](https://star-history.com/#hiall-fyi/yale_smart_alarm_ce&Date)
-
-</div>
 
 <details>
 <summary><strong>Disclaimer</strong></summary>

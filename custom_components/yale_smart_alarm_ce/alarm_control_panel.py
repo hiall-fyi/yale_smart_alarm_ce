@@ -10,6 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import ARM_STATE_DISARM, ARM_STATE_FULL, ARM_STATE_PARTIAL
 from .entity import YaleAlarmEntity, setup_dynamic_platform
@@ -31,6 +32,11 @@ _ARM_STATE_MAP: dict[str, AlarmControlPanelState] = {
     ARM_STATE_PARTIAL: AlarmControlPanelState.ARMED_HOME,
     ARM_STATE_FULL: AlarmControlPanelState.ARMED_AWAY,
 }
+
+# The fourth member of Yale's arm-state enum, which is not an arm state:
+# it carries an empty display label and is what an area reports before it
+# has one.  Maps to no panel state, but is expected rather than odd.
+_ARM_STATE_UNINITIALISED = "UNINITIALISED"
 
 
 async def async_setup_entry(
@@ -65,7 +71,7 @@ async def async_setup_entry(
     setup_dynamic_platform(entry, async_add_entities, _create_entities)
 
 
-class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
+class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity, RestoreEntity):
     """Represent a Yale alarm control panel area."""
 
     _attr_supported_features = (
@@ -84,6 +90,10 @@ class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
         """Initialize the YaleAlarmControlPanel."""
         super().__init__(coordinator, alarm_id)
         self._area_id = area_id
+        # Arm states already reported as unrecognised.  ``alarm_state`` is a
+        # property, so it runs on every state read and would otherwise log
+        # the same value indefinitely.
+        self._reported_unknown_states: set[str] = set()
         self._attr_unique_id = f"{alarm_id}_{area_id}"
         if area_name:
             # Multi-area: use area name directly so each zone is distinguishable
@@ -91,24 +101,51 @@ class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
         else:
             self._attr_translation_key = "alarm"
 
+    async def async_added_to_hass(self) -> None:
+        """Restore an exit delay that was still running before a restart.
+
+        Yale reports a countdown only in the arm command's response, so
+        without this a restart or reload mid-countdown reports the alarm
+        as disarmed while it is arming.
+        """
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state is None:
+            return
+        end_iso = last_state.attributes.get("exit_delay_end")
+        if not end_iso:
+            return
+        try:
+            end = datetime.fromisoformat(end_iso)
+        except (TypeError, ValueError):
+            _LOGGER.debug(
+                "Ignoring unparseable restored exit delay for %s: %r",
+                self.entity_id,
+                end_iso,
+            )
+            return
+        self.coordinator.restore_exit_delay(
+            self._area_id, int(end.timestamp() * 1000),
+        )
+
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current arm state.
 
         Priority order:
-        1. Triggered — always takes priority.
-        2. Exit delay active — show ARMING while the countdown runs.
-        3. Arm state from API — normal armed/disarmed state.
+        1. Triggered, which always takes priority.
+        2. Exit delay active, showing ARMING while the countdown runs.
+        3. Arm state from the API for the steady state.
 
         Returns None when the state cannot be determined (shows
         "unknown" in the UI).
         """
-        # Check triggered FIRST — triggered always takes priority
+        # Triggered outranks every other state.
         for area in self.alarm_status.get("areaAlarmState") or []:
             if area.get("areaID") == self._area_id and area.get("inAlarm"):
                 return AlarmControlPanelState.TRIGGERED
 
-        # Check exit delay — arming in progress.
+        # Check exit delay, arming in progress.
         # exitTime comes from the arm command response (not polling data),
         # tracked per area so multi-area systems don't cross-contaminate.
         exit_end_ms = self.coordinator.get_area_exit_delay_end_ms(self._area_id)
@@ -124,10 +161,17 @@ class YaleAlarmControlPanel(YaleAlarmEntity, AlarmControlPanelEntity):
                 mapped = _ARM_STATE_MAP.get(state)
                 if mapped is not None:
                     return mapped
-                _LOGGER.warning("Alarm reported unrecognised arm state: %s", state)
+                if (
+                    state != _ARM_STATE_UNINITIALISED
+                    and state not in self._reported_unknown_states
+                ):
+                    self._reported_unknown_states.add(state)
+                    _LOGGER.warning(
+                        "Alarm reported unrecognised arm state: %s", state,
+                    )
                 return None
 
-        # Area not found — state unknown
+        # Area not found, so the state is unknown
         _LOGGER.debug(
             "Area %s not found in alarm %s status data",
             self._area_id,

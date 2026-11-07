@@ -1,0 +1,50 @@
+name: Validate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: "ubuntu-latest"
+    name: Secret Scanning
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: "gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e" # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-hacs:
+    runs-on: "ubuntu-latest"
+    name: HACS Validation
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+
+      - name: HACS validation
+        uses: "hacs/action@d556e736723344f83838d08488c983a15381059a" # 22.5.0
+        with:
+          category: "integration"
+
+  validate-hassfest:
+    runs-on: "ubuntu-latest"
+    name: Hassfest Validation
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+
+      - name: Hassfest validation
+        # Left on master on purpose: the action has a single tag, so Dependabot has nothing to follow.
+        uses: "home-assistant/actions/hassfest@master"

@@ -4,7 +4,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    DeviceInfo,
+)
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_TYPE_NAMES, DOMAIN, MANUFACTURER
@@ -18,6 +22,23 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
+_hub_device_ids: dict[str, str] = {}
+
+
+def set_cached_hub_device_id(alarm_id: str, device_id: str) -> None:
+    """Record an alarm hub's registry id, set once per alarm by register_alarm_hub_devices."""
+    _hub_device_ids[alarm_id] = device_id
+
+
+def clear_cached_hub_device_id(alarm_id: str) -> None:
+    """Drop the cached id on entry unload: a stale id is worse than a miss, not equivalent to one."""
+    _hub_device_ids.pop(alarm_id, None)
+
+
+def _get_cached_hub_device_id(alarm_id: str) -> str | None:
+    return _hub_device_ids.get(alarm_id)
+
+
 def build_device_info(alarm_id: str, device: dict[str, Any]) -> DeviceInfo:
     """Build a DeviceInfo for an alarm-attached device."""
     device_type = device.get("type", "unknown")
@@ -29,7 +50,7 @@ def build_device_info(alarm_id: str, device: dict[str, Any]) -> DeviceInfo:
         model=DEVICE_TYPE_NAMES.get(device_type, device_type),
         serial_number=device.get("serialNumber"),
         sw_version=status.get("firmwareVersion"),
-        via_device=(DOMAIN, alarm_id),
+        via_device_id=_get_cached_hub_device_id(alarm_id) or UNDEFINED,
     )
 
 
@@ -163,12 +184,12 @@ class YaleDeviceEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
         dd = self.device_data
         if dd:
             return build_device_info(self._alarm_id, dd)
-        # Fallback: device disappeared from API — return stable identifiers
+        # Fallback: device disappeared from API, return stable identifiers
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name="Yale Device",
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, self._alarm_id),
+            via_device_id=_get_cached_hub_device_id(self._alarm_id) or UNDEFINED,
         )
 
     @property

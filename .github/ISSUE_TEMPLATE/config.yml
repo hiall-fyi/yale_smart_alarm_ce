@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and help
+    url: https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions
+    about: For usage questions and general help, please use Discussions.
+  - name: Confirm a device works
+    url: https://github.com/hiall-fyi/yale_smart_alarm_ce/discussions
+    about: Running hardware marked Untested in the README? Post here, it helps everyone.

@@ -41,7 +41,7 @@ DEVICE_TYPE_KEYFOB = "alarm_keyfob"
 DEVICE_TYPE_SMOKE = "alarm_smoke_sensor"
 DEVICE_TYPE_RF_BUTTON = "alarm_rf_button"
 
-# Device type groups — frozenset for O(1) membership checks
+# Device type groups, as frozensets for O(1) membership checks
 CONTACT_SENSOR_TYPES: frozenset[str] = frozenset({
     DEVICE_TYPE_CONTACT_INDOOR,
     DEVICE_TYPE_CONTACT_OUTDOOR,
