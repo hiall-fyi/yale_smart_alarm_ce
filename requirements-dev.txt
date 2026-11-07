@@ -7,12 +7,12 @@
 # would silently check against tool defaults instead. Home Assistant is here
 # because the mypy settings are tuned against its type stubs.
 homeassistant==2026.11.0
-ruff==0.16.5
-mypy==2.3.1
+ruff==0.17.3
+mypy==2.4.1
 
 # The test suite is not part of this repository either; these are here so a
 # fresh clone can set up the same local environment.
-pytest==9.0.3
-pytest-asyncio==1.4.0
+pytest==9.2.0
+pytest-asyncio==1.4.1.post1
 pytest-homeassistant==2026.11.0
 hypothesis==6.170.15
