@@ -4,6 +4,18 @@ All notable changes to Yale Smart Alarm CE are documented here.
 
 ---
 
+## 1.1.1 — Sign-in Fix (2026-11-18)
+
+### Improvements
+
+- **Code scanning and development tools are up to date** — The CodeQL security scan moves to v4.39.3, and the tools used only for development and testing (ruff, mypy, pytest and pytest-asyncio) move to their latest releases (#9). Nothing changes in how the integration runs.
+
+### Bug Fixes
+
+- **Signing in to Yale works again** ([#11](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/11) - @GTunney, @Nomad73, @leppy1986, @carma1979-dotcom; [#12](https://github.com/hiall-fyi/yale_smart_alarm_ce/issues/12) - @StVitusDance74) — Yale's servers started rejecting the integration's sign-in requests, so setup and re-authentication failed with "Authentication failed (HTTP 403)". Sign-in goes through again.
+
+---
+
 ## 1.1.0 — Home Assistant 2026.11 Support, Arming State and Diagnostics Fixes (unreleased)
 
 ### Improvements

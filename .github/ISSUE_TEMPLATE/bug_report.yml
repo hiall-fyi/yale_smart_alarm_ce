@@ -14,7 +14,7 @@ body:
       options:
         - label: I have searched the existing issues and discussions for this
           required: true
-        - label: I'm running the latest Yale Smart Alarm CE release shown in HACS
+        - label: I'm running the latest Yale Smart Alarm CE release shown in the Marketplace
           required: true
   - type: markdown
     attributes:
@@ -29,7 +29,7 @@ body:
     attributes:
       label: Yale Smart Alarm CE version
       description: Copy it from the integration's device page rather than typing from memory.
-      placeholder: e.g. 1.1.0
+      placeholder: e.g. 1.1.1
     validations:
       required: true
   - type: input

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.11.0+-blue?style=for-the-badge&logo=home-assistant) ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge) ![Stable](https://img.shields.io/badge/Stable-1.1.0-brightgreen?style=for-the-badge) ![License](https://img.shields.io/badge/License-AGPL--3.0-lightgrey?style=for-the-badge)
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.11.0+-blue?style=for-the-badge&logo=home-assistant) ![Stable](https://img.shields.io/badge/Stable-1.1.1-brightgreen?style=for-the-badge) ![License](https://img.shields.io/badge/License-AGPL--3.0-lightgrey?style=for-the-badge)
 
 ![GitHub stars](https://img.shields.io/github/stars/hiall-fyi/yale_smart_alarm_ce?style=for-the-badge&logo=github) [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/hiallfyi)
 
@@ -38,13 +38,16 @@ If you bought your hub recently and use the Yale Home app, you want this integra
 
 **You'll need:** Home Assistant 2026.11 or newer, and a Yale account that already works with the Yale Home app.
 
-### 1. Install via HACS
+### 1. Install from the Marketplace
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hiall-fyi&repository=yale_smart_alarm_ce&category=integration)
+The Marketplace is part of Home Assistant 2026.11 and replaced HACS there. Yale Smart Alarm CE isn't in its catalog yet, so you add it from its GitHub link once.
 
-1. Click the badge above, or add `https://github.com/hiall-fyi/yale_smart_alarm_ce` as a custom repository in HACS.
-2. Install **Yale Smart Alarm CE**.
-3. Restart Home Assistant.
+1. Open **Settings → Marketplace** and select **Add from link** in the upper-right corner.
+2. Enter `hiall-fyi/yale_smart_alarm_ce` and select **Add**.
+3. Open **Yale Smart Alarm CE** from the list, select **Install**, check the version in the dialog and select **Install** again.
+4. Restart Home Assistant if it asks you to.
+
+The steps are in the Home Assistant [Marketplace documentation](https://www.home-assistant.io/integrations/marketplace/).
 
 <details>
 <summary>Manual install</summary>
@@ -468,7 +471,7 @@ automation:
 
 1. **Settings → Devices & Services → Yale Smart Alarm CE**, click the three-dot menu and pick **Delete**.
 2. Restart Home Assistant.
-3. If installed via HACS: open **HACS → Integrations**, find Yale Smart Alarm CE, and pick **Remove** from its three-dot menu.
+3. If installed from the Marketplace: open **Settings → Marketplace → Yale Smart Alarm CE**, select **⋮ → Uninstall** and confirm.
 4. If installed manually: delete the `custom_components/yale_smart_alarm_ce/` folder from your config.
 5. Restart Home Assistant once more.
 

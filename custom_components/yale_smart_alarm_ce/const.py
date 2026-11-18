@@ -104,4 +104,4 @@ REGION_OPTIONS: dict[str, str] = {
 VOLUME_OPTIONS: list[str] = ["OFF", "LOW", "MID", "HIGH"]
 
 # User-Agent string for API requests (from Yale Home app)
-USER_AGENT = "Yale/2025.13.0 (Android 14)"
+USER_AGENT = "Yale/2026.12.0 (Android 14)"
